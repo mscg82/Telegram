@@ -517,7 +517,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
     }
 
     long getNewSessionId() {
-        long newSessionId = MessagesController.random.nextLong();
+        long newSessionId = Utilities.random.nextLong();
         return isDebugSession ? (0xabcd000000000000L | (newSessionId & 0x0000ffffffffffffL)) : newSessionId;
     }
 
@@ -704,7 +704,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                         if (existing == null) {
                             existing = new Datacenter();
                             existing.datacenterId = datacenterDesc.id;
-                            existing.authSessionId = MessagesController.random.nextLong();
+                            existing.authSessionId = Utilities.random.nextLong();
                             datacentersArr.add(existing);
                             datacenterMap.put(existing.datacenterId, existing);
                         }
@@ -1226,7 +1226,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                             break;
                         }
                     }
-                    Datacenter newDc = allDc.get(Math.abs(MessagesController.random.nextInt()) % allDc.size());
+                    Datacenter newDc = allDc.get(Math.abs(Utilities.random.nextInt()) % allDc.size());
                     request.runningDatacenterId = newDc.datacenterId;
                 }
             }
@@ -1761,7 +1761,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
         BuffersStorage.getInstance().reuseFreeBuffer(innerOs);
         byte[] b = new byte[1];
         for (int a = 0; a < zeroCount; a++) {
-            MessagesController.random.nextBytes(b);
+            Utilities.random.nextBytes(b);
             dataForEncryption.writeByte(b[0]);
         }
 

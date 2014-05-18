@@ -1385,7 +1385,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
         if (selectedMessagesIds.isEmpty()) {
             mActionMode.finish();
         } else {
-            mActionMode.setTitle(String.format("%s %d", LocaleController.getString("Selected", R.string.Selected), selectedMessagesIds.size()));
+            mActionMode.setTitle(LocaleController.formatString("Selected", R.string.Selected, selectedMessagesIds.size()));
         }
     }
 
