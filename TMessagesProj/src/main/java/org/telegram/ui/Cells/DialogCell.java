@@ -476,11 +476,11 @@ public class DialogCell extends BaseCell {
                                     }
                                 }
                             }
+                            checkMessage = false;
                             if (message.messageOwner.media != null && !(message.messageOwner.media instanceof TLRPC.TL_messageMediaEmpty)) {
-                                messageString = message.messageText;
                                 currentMessagePaint = messagePrintingPaint;
+                                messageString = Emoji.replaceEmoji(Html.fromHtml(String.format("<font color=#316f9f>%s:</font> <font color=#316f9f>%s</font>", name, message.messageText)));
                             } else {
-                                checkMessage = false;
                                 if (message.messageOwner.message != null) {
                                     messageString = Emoji.replaceEmoji(Html.fromHtml(String.format("<font color=#316f9f>%s:</font> <font color=#808080>%s</font>", name, message.messageOwner.message.replace("\n", " "))));
                                 }

@@ -693,7 +693,11 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
             TextView textView = (TextView)fragmentView.findViewById(R.id.slideToCancelTextView);
             textView.setText(LocaleController.getString("SlideToCancel", R.string.SlideToCancel));
             textView = (TextView)fragmentView.findViewById(R.id.bottom_overlay_chat_text);
-            textView.setText(LocaleController.getString("DeleteThisGroup", R.string.DeleteThisGroup));
+            if (currentUser == null) {
+                textView.setText(LocaleController.getString("DeleteThisGroup", R.string.DeleteThisGroup));
+            } else {
+                textView.setText(LocaleController.getString("DeleteThisChat", R.string.DeleteThisChat));
+            }
             textView = (TextView)fragmentView.findViewById(R.id.secret_title);
             textView.setText(LocaleController.getString("EncryptedDescriptionTitle", R.string.EncryptedDescriptionTitle));
             textView = (TextView)fragmentView.findViewById(R.id.secret_description1);
@@ -746,15 +750,6 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
                         return true;
                     }
                     return false;
-                }
-            });
-
-            messsageEditText.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (emojiPopup != null && emojiPopup.isShowing()) {
-                        showEmojiPopup(false);
-                    }
                 }
             });
 
@@ -856,9 +851,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
 
                 @Override
                 public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-                    String message = charSequence.toString().trim();
-                    message = message.replaceAll("\n\n+", "\n\n");
-                    message = message.replaceAll(" +", " ");
+                    String message = getTrimmedString(charSequence.toString());
                     sendButton.setEnabled(message.length() != 0);
                     checkSendButton();
 
@@ -894,10 +887,19 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
             bottomOverlayChat.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (currentChat != null) {
-                        MessagesController.getInstance().deleteDialog(-currentChat.id, 0, false);
-                        finishFragment();
-                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(parentActivity);
+                    builder.setMessage(LocaleController.getString("AreYouSure", R.string.AreYouSure));
+                    builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                    builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            MessagesController.getInstance().deleteDialog(dialog_id, 0, false);
+                            finishFragment();
+                        }
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    visibleDialog = builder.show();
+                    visibleDialog.setCanceledOnTouchOutside(true);
                 }
             });
 
@@ -931,7 +933,8 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
                     ChatActivity.this.onSwipeLeft();
                 }
             });
-            if (currentChat != null && (currentChat instanceof TLRPC.TL_chatForbidden || currentChat.left)) {
+            if (currentChat != null && (currentChat instanceof TLRPC.TL_chatForbidden || currentChat.left) ||
+                    currentUser != null && (currentUser instanceof TLRPC.TL_userDeleted || currentUser instanceof TLRPC.TL_userEmpty)) {
                 bottomOverlayChat.setVisibility(View.VISIBLE);
             } else {
                 bottomOverlayChat.setVisibility(View.GONE);
@@ -943,6 +946,17 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
             }
         }
         return fragmentView;
+    }
+
+    private String getTrimmedString(String src) {
+        String result = src.trim();
+        while (src.startsWith("\n")) {
+            src = src.substring(1);
+        }
+        while (src.endsWith("\n")) {
+            src = src.substring(0, src.length() - 1);
+        }
+        return src;
     }
 
     private boolean onSwipeLeft() {
@@ -978,9 +992,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
     }
 
     private void checkSendButton() {
-        String message = messsageEditText.getText().toString().trim();
-        message = message.replaceAll("\n\n+", "\n\n");
-        message = message.replaceAll(" +", " ");
+        String message = getTrimmedString(messsageEditText.getText().toString());
         if (message.length() > 0) {
             sendButton.setVisibility(View.VISIBLE);
             audioSendButton.setVisibility(View.INVISIBLE);
@@ -1093,8 +1105,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
     }
 
     private void sendMessage() {
-        String message = messsageEditText.getText().toString().trim();
-        if (processSendingText(message)) {
+        if (processSendingText(messsageEditText.getText().toString())) {
             messsageEditText.setText("");
             lastTypingTimeSend = 0;
             chatListView.post(new Runnable() {
@@ -1451,20 +1462,11 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
                     }
                 }
             } else if (currentUser != null) {
-                if (currentUser.status == null) {
-                    actionBar.setSubtitle(LocaleController.getString("Offline", R.string.Offline));
-                } else {
-                    int currentTime = ConnectionsManager.getInstance().getCurrentTime();
-                    if (currentUser.status.expires > currentTime) {
-                        actionBar.setSubtitle(LocaleController.getString("Online", R.string.Online));
-                    } else {
-                        if (currentUser.status.expires <= 10000) {
-                            actionBar.setSubtitle(LocaleController.getString("Invisible", R.string.Invisible));
-                        } else {
-                            actionBar.setSubtitle(LocaleController.formatDateOnline(currentUser.status.expires));
-                        }
-                    }
+                TLRPC.User user = MessagesController.getInstance().users.get(currentUser.id);
+                if (user != null) {
+                    currentUser = user;
                 }
+                actionBar.setSubtitle(LocaleController.formatUserStatus(currentUser));
             }
         } else {
             lastPrintString = printString;
@@ -1513,7 +1515,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
         }
         int rotation = manager.getDefaultDisplay().getRotation();
 
-        if (height > Emoji.scale(50)) {
+        if (height > Utilities.dp(50)) {
             if (rotation == Surface.ROTATION_270 || rotation == Surface.ROTATION_90) {
                 keyboardHeightLand = height;
                 parentActivity.getSharedPreferences("emoji", 0).edit().putInt("kbd_height_land3", keyboardHeightLand).commit();
@@ -1632,8 +1634,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
     }
 
     public boolean processSendingText(String text) {
-        text = text.replaceAll("\n\n+", "\n\n");
-        text = text.replaceAll(" +", " ");
+        text = getTrimmedString(text);
         if (text.length() != 0) {
             int count = (int)Math.ceil(text.length() / 2048.0f);
             for (int a = 0; a < count; a++) {
@@ -2453,8 +2454,13 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
         if (currentUser == null) {
             topPanel.setVisibility(View.GONE);
         } else {
+            TLRPC.User user = MessagesController.getInstance().users.get(currentUser.id);
+            if (user != null) {
+                currentUser = user;
+            }
             if (currentEncryptedChat != null && !(currentEncryptedChat instanceof TLRPC.TL_encryptedChat)
                     || currentUser.id / 1000 == 333
+                    || currentUser instanceof TLRPC.TL_userEmpty || currentUser instanceof TLRPC.TL_userDeleted
                     || (currentUser.phone != null && currentUser.phone.length() != 0 &&
                     ContactsController.getInstance().contactsDict.get(currentUser.id) != null &&
                     (ContactsController.getInstance().contactsDict.size() != 0 || !ContactsController.getInstance().loadingContacts))) {
@@ -2544,7 +2550,7 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
         if (parentActivity == null) {
             return;
         }
-        InputMethodManager localInputMethodManager = (InputMethodManager)parentActivity.getSystemService("input_method");
+        InputMethodManager localInputMethodManager = (InputMethodManager)parentActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
         if (show) {
             if (emojiPopup == null) {
                 createEmojiPopup();
@@ -2553,10 +2559,10 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
             WindowManager manager = (WindowManager) ApplicationLoader.applicationContext.getSystemService(Activity.WINDOW_SERVICE);
             int rotation = manager.getDefaultDisplay().getRotation();
             if (keyboardHeight <= 0) {
-                keyboardHeight = parentActivity.getSharedPreferences("emoji", 0).getInt("kbd_height", Emoji.scale(200.0f));
+                keyboardHeight = parentActivity.getSharedPreferences("emoji", 0).getInt("kbd_height", Utilities.dp(200));
             }
             if (keyboardHeightLand <= 0) {
-                keyboardHeightLand = parentActivity.getSharedPreferences("emoji", 0).getInt("kbd_height_land3", Emoji.scale(200.0f));
+                keyboardHeightLand = parentActivity.getSharedPreferences("emoji", 0).getInt("kbd_height_land3", Utilities.dp(200));
             }
             if (rotation == Surface.ROTATION_270 || rotation == Surface.ROTATION_90) {
                 currentHeight = keyboardHeightLand;
@@ -2852,7 +2858,10 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
         avatarItem.setShowAsAction(SupportMenuItem.SHOW_AS_ACTION_ALWAYS);
         avatarItem.setActionView(R.layout.chat_header_layout);
 
-        if (currentEncryptedChat != null && !(currentEncryptedChat instanceof TLRPC.TL_encryptedChat) || currentChat != null && (currentChat instanceof TLRPC.TL_chatForbidden || currentChat.left)) {
+        if (currentEncryptedChat != null && !(currentEncryptedChat instanceof TLRPC.TL_encryptedChat) ||
+                currentChat != null && (currentChat instanceof TLRPC.TL_chatForbidden || currentChat.left) ||
+                currentUser != null && (currentUser instanceof TLRPC.TL_userDeleted || currentUser instanceof TLRPC.TL_userEmpty)) {
+
             if (menuItem != null) {
                 menuItem.setVisible(false);
             }
@@ -2904,7 +2913,8 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
                         }
                     });
                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                    builder.show().setCanceledOnTouchOutside(true);
+                    visibleDialog = builder.show();
+                    visibleDialog.setCanceledOnTouchOutside(true);
                 }
             });
             timerButton.setTime(currentEncryptedChat.ttl);
@@ -3137,6 +3147,9 @@ public class ChatActivity extends BaseFragment implements SizeNotifierRelativeLa
                                     }
                                 }
                                 if (locFile != null) {
+                                    if (parentActivity == null) {
+                                        return;
+                                    }
                                     if (LocaleController.getInstance().applyLanguageFile(locFile)) {
                                         ((LaunchActivity)parentActivity).presentFragment(new LanguageSelectActivity(), "settings_lang", false);
                                     } else if (parentActivity != null) {

@@ -94,7 +94,7 @@
     <string name="Message">Mensaje</string>
     <string name="TypeMessage">Escribe un mensaje</string>
     <string name="DOWNLOAD">Descargar</string>
-    <string name="Selected">Elegidos:</string>
+    <string name="Selected">Elegidos: %d</string>
     <string name="ShareMyContactInfo">COMPARTIR MI INFORMACIÓN DE CONTACTO</string>
     <string name="AddToContacts">AÑADIR A CONTACTOS</string>
     <string name="EncryptedPlaceholderTitleIncoming">%s te ha invitado a un chat secreto.</string>
@@ -109,6 +109,7 @@
     <string name="YouWereKicked">Has sido expulsado de este grupo</string>
     <string name="YouLeft">Has abandonado este grupo</string>
     <string name="DeleteThisGroup">Eliminar este grupo</string>
+    <string name="DeleteThisChat">Delete this chat</string>
     <string name="SlideToCancel">DESLIZA PARA CANCELAR</string>
     <string name="SaveToDownloads">Guardar en descargas</string>
     <string name="ApplyLocalizationFile">Aplicar fichero de localización</string>
@@ -232,6 +233,14 @@
     <string name="InAppSounds">Sonidos en la app</string>
     <string name="InAppVibrate">Vibración en la app</string>
     <string name="Vibrate">Vibración</string>
+    <string name="VibrateSpeed">Vibration speed</string>
+    <string name="VibrateSpeedTitle">Pick a speed</string>
+    <string name="VibrateSpeedFast">Fast</string>
+    <string name="VibrateSpeedMedium">Medium</string>
+    <string name="VibrateSpeedSlow">Slow</string>
+    <string name="VibrateSpeedDefault">Standard</string>
+    <string name="VibrateCount">Vibrations number</string>
+    <string name="VibrateCountTitle">Pick the number fo vibrations</string>
     <string name="InAppPreview">Vista previa en la app</string>
     <string name="Reset">RESTABLECER</string>
     <string name="ResetAllNotifications">Restablecer todas las notificaciones</string>
@@ -262,6 +271,8 @@
     <string name="TelegramFaqUrl">https://telegram.org/faq/es</string>
     <string name="DeleteLocalization">¿Eliminar localización?</string>
     <string name="IncorrectLocalization">Fichero de localización incorrecto</string>
+    <string name="Enabled">Enabled</string>
+    <string name="Disabled">Disabled</string>
 
     <!--media view-->
     <string name="NoMedia">No hay fotos ni vídeos compartidos aún</string>
