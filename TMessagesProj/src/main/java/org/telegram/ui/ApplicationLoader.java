@@ -37,7 +37,6 @@ import org.telegram.messenger.NativeLoader;
 import org.telegram.messenger.ScreenReceiver;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.Utilities;
-import org.telegram.ui.Views.BaseFragment;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -58,8 +57,6 @@ public class ApplicationLoader extends Application {
     public static volatile Handler applicationHandler = null;
     private static volatile boolean applicationInited = false;
     public static volatile boolean isScreenOn = false;
-
-    public static ArrayList<BaseFragment> fragmentsStack = new ArrayList<BaseFragment>();
 
     public static void postInitApplication() {
         if (applicationInited) {

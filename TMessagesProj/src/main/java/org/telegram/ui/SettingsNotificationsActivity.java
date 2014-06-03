@@ -17,12 +17,8 @@ import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -42,8 +38,8 @@ import org.telegram.messenger.TLObject;
 import org.telegram.messenger.TLRPC;
 import org.telegram.messenger.Utilities;
 import org.telegram.objects.VibrationOptions;
-import org.telegram.ui.Views.BaseFragment;
-import org.telegram.ui.Views.OnSwipeTouchListener;
+import org.telegram.ui.Views.ActionBar.ActionBarLayer;
+import org.telegram.ui.Views.ActionBar.BaseFragment;
 
 public class SettingsNotificationsActivity extends BaseFragment {
     private ListView listView;
@@ -106,24 +102,26 @@ public class SettingsNotificationsActivity extends BaseFragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View createView(LayoutInflater inflater, ViewGroup container) {
         if (fragmentView == null) {
+            actionBarLayer.setDisplayHomeAsUpEnabled(true);
+            actionBarLayer.setTitle(LocaleController.getString("NotificationsAndSounds", R.string.NotificationsAndSounds));
+            actionBarLayer.setActionBarMenuOnItemClick(new ActionBarLayer.ActionBarMenuOnItemClick() {
+                @Override
+                public void onItemClick(int id) {
+                    if (id == -1) {
+                        finishFragment();
+                    }
+                }
+            });
+
             fragmentView = inflater.inflate(R.layout.settings_layout, container, false);
-            ListAdapter listAdapter = new ListAdapter(parentActivity);
+            ListAdapter listAdapter = new ListAdapter(getParentActivity());
             listView = (ListView)fragmentView.findViewById(R.id.listView);
             listView.setAdapter(listAdapter);
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    if (parentActivity == null) {
-                        return;
-                    }
                     if (i == messageAlertRow || i == groupAlertRow) {
                         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = preferences.edit();
@@ -182,7 +180,7 @@ public class SettingsNotificationsActivity extends BaseFragment {
                         }
                         int currentSpeedIndex = currentSpeed.getValue();
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(parentActivity)
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity())
                             .setTitle(LocaleController.getString("VibrateSpeedTitle", R.string.VibrateSpeedTitle))
                             .setSingleChoiceItems(speeds, currentSpeedIndex, new DialogInterface.OnClickListener() {
                                 @Override
@@ -217,7 +215,7 @@ public class SettingsNotificationsActivity extends BaseFragment {
                         for(int j = 0, vl = counts.length; j < vl; j++)
                             counts[j] = String.valueOf(j + 1);
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity())
                             .setTitle(LocaleController.getString("VibrateCountTitle", R.string.VibrateCountTitle))
                             .setSingleChoiceItems(counts, count - 1, new DialogInterface.OnClickListener() {
                                 @Override
@@ -272,7 +270,7 @@ public class SettingsNotificationsActivity extends BaseFragment {
                                 }
                             }
                             tmpIntent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, currentSound);
-                            parentActivity.startActivityForResult(tmpIntent, i);
+                            getParentActivity().startActivityForResult(tmpIntent, i);
                         } catch (Exception e) {
                             FileLog.e("tmessages", e);
                         }
@@ -289,20 +287,13 @@ public class SettingsNotificationsActivity extends BaseFragment {
                                     @Override
                                     public void run() {
                                         MessagesController.getInstance().enableJoined = true;
-                                        ActionBarActivity inflaterActivity = parentActivity;
-                                        if (inflaterActivity == null) {
-                                            inflaterActivity = (ActionBarActivity)getActivity();
-                                        }
-                                        if (inflaterActivity == null) {
-                                            return;
-                                        }
                                         reseting = false;
                                         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
                                         SharedPreferences.Editor editor = preferences.edit();
                                         editor.clear();
                                         editor.commit();
                                         listView.invalidateViews();
-                                        Toast toast = Toast.makeText(inflaterActivity, R.string.ResetNotificationsText, Toast.LENGTH_SHORT);
+                                        Toast toast = Toast.makeText(getParentActivity(), R.string.ResetNotificationsText, Toast.LENGTH_SHORT);
                                         toast.show();
                                     }
                                 });
@@ -347,12 +338,6 @@ public class SettingsNotificationsActivity extends BaseFragment {
                     }
                 }
             });
-
-            listView.setOnTouchListener(new OnSwipeTouchListener() {
-                public void onSwipeRight() {
-                    finishFragment(true);
-                }
-            });
         } else {
             ViewGroup parent = (ViewGroup)fragmentView.getParent();
             if (parent != null) {
@@ -367,13 +352,13 @@ public class SettingsNotificationsActivity extends BaseFragment {
         if (resultCode == Activity.RESULT_OK) {
             Uri ringtone = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
             String name = null;
-            if (ringtone != null && parentActivity != null) {
-                Ringtone rng = RingtoneManager.getRingtone(parentActivity, ringtone);
+            if (ringtone != null) {
+                Ringtone rng = RingtoneManager.getRingtone(getParentActivity(), ringtone);
                 if (rng != null) {
                     if(ringtone.equals(Settings.System.DEFAULT_NOTIFICATION_URI)) {
                         name = LocaleController.getString("Default", R.string.Default);
                     } else {
-                        name = rng.getTitle(parentActivity);
+                        name = rng.getTitle(getParentActivity());
                     }
                     rng.stop();
                 }
@@ -402,61 +387,6 @@ public class SettingsNotificationsActivity extends BaseFragment {
             editor.commit();
             listView.invalidateViews();
         }
-    }
-
-    @Override
-    public void applySelfActionBar() {
-        if (parentActivity == null) {
-            return;
-        }
-        ActionBar actionBar = parentActivity.getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setDisplayShowHomeEnabled(false);
-        actionBar.setSubtitle(null);
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setDisplayUseLogoEnabled(false);
-        actionBar.setDisplayShowCustomEnabled(false);
-        actionBar.setCustomView(null);
-        actionBar.setTitle(LocaleController.getString("NotificationsAndSounds", R.string.NotificationsAndSounds));
-
-        TextView title = (TextView)parentActivity.findViewById(R.id.action_bar_title);
-        if (title == null) {
-            final int subtitleId = parentActivity.getResources().getIdentifier("action_bar_title", "id", "android");
-            title = (TextView)parentActivity.findViewById(subtitleId);
-        }
-        if (title != null) {
-            title.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-            title.setCompoundDrawablePadding(0);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (isFinish) {
-            return;
-        }
-        if (getActivity() == null) {
-            return;
-        }
-        ((LaunchActivity)parentActivity).showActionBar();
-        ((LaunchActivity)parentActivity).updateActionBar();
-    }
-
-    @Override
-    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int itemId = item.getItemId();
-        switch (itemId) {
-            case android.R.id.home:
-                finishFragment();
-                break;
-        }
-        return true;
     }
 
     private class ListAdapter extends BaseAdapter {
