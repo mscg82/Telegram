@@ -464,6 +464,7 @@ public class ChatProfileActivity extends BaseFragment implements NotificationCen
 
     @Override
     public void onResume() {
+        super.onResume();
         if (listViewAdapter != null) {
             listViewAdapter.notifyDataSetChanged();
         }
