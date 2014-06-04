@@ -88,6 +88,6 @@ android {
         minSdkVersion 8
         targetSdkVersion 19
         versionCode 239
-        versionName "1.4.15.mscg82_1"
+        versionName "1.4.15.mscg82_3"
     }
 }
