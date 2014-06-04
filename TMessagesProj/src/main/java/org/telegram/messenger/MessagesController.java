@@ -29,7 +29,6 @@ import android.os.Build;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.SparseArray;
 
@@ -5122,7 +5121,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                                 @Override
                                 public void run() {
                                     try {
-                                        if (!((ActionBarActivity) context).isFinishing()) {
+                                        if (!((Activity) context).isFinishing()) {
                                             progressDialog.dismiss();
                                         }
                                     } catch (Exception e) {
@@ -5163,7 +5162,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                                     @Override
                                     public void run() {
                                         startingSecretChat = false;
-                                        if (!((ActionBarActivity) context).isFinishing()) {
+                                        if (!((Activity) context).isFinishing()) {
                                             try {
                                                 progressDialog.dismiss();
                                             } catch (Exception e) {
@@ -5218,7 +5217,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                                 Utilities.RunOnUIThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        if (!((ActionBarActivity) context).isFinishing()) {
+                                        if (!((Activity) context).isFinishing()) {
                                             startingSecretChat = false;
                                             try {
                                                 progressDialog.dismiss();
@@ -5242,7 +5241,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                         @Override
                         public void run() {
                             startingSecretChat = false;
-                            if (!((ActionBarActivity) context).isFinishing()) {
+                            if (!((Activity) context).isFinishing()) {
                                 try {
                                     progressDialog.dismiss();
                                 } catch (Exception e) {
