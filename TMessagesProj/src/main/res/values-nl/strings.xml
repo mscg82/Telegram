@@ -233,6 +233,14 @@
     <string name="InAppSounds">In-app geluiden</string>
     <string name="InAppVibrate">In-app trillen</string>
     <string name="Vibrate">Trillen</string>
+    <string name="VibrateSpeed">Vibration speed</string>
+    <string name="VibrateSpeedTitle">Pick a speed</string>
+    <string name="VibrateSpeedFast">Fast</string>
+    <string name="VibrateSpeedMedium">Medium</string>
+    <string name="VibrateSpeedSlow">Slow</string>
+    <string name="VibrateSpeedDefault">Standard</string>
+    <string name="VibrateCount">Vibrations number</string>
+    <string name="VibrateCountTitle">Pick the number fo vibrations</string>
     <string name="InAppPreview">In-app voorbeelden</string>
     <string name="Reset">RESETTEN</string>
     <string name="ResetAllNotifications">Alle meldingen resetten</string>
@@ -265,6 +273,11 @@
     <string name="IncorrectLocalization">Ongeldig vertalingsbestand</string>
     <string name="Enabled">Enabled</string>
     <string name="Disabled">Disabled</string>
+    <string name="NotificationsService">Notifications Service</string>
+    <string name="NotificationsServiceDisableInfo">If google play services are enough for you to receive notifications, you can disable Notifications Service. However we recommend you to leave it enabled to keep app running in background and receive instant notifications.</string>
+    <string name="SortBy">Sort By</string>
+    <string name="ImportContacts">Import Contacts</string>
+    <string name="WiFiOnly">via WiFi only</string>
 
     <!--media view-->
     <string name="NoMedia">Nog geen media gedeeld</string>
