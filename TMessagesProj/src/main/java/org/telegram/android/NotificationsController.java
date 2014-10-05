@@ -9,6 +9,7 @@
 package org.telegram.android;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +39,7 @@ import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.PopupNotificationActivity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -284,7 +286,7 @@ public class NotificationsController {
             TLRPC.FileLocation photoPath = null;
 
             boolean notifyDisabled = false;
-            int needVibrate = 0;
+            boolean needVibrate = false;
             String choosenSoundPath = null;
             int ledColor = 0xff00ff00;
             boolean inAppSounds = false;
@@ -312,7 +314,7 @@ public class NotificationsController {
                     } else if (choosenSoundPath == null) {
                         choosenSoundPath = preferences.getString("GroupSoundPath", defaultPath);
                     }
-                    needVibrate = preferences.getInt("vibrate_group", 0);
+                    needVibrate = preferences.getBoolean("EnableVibrateGroup", true);
                     ledColor = preferences.getInt("GroupLed", 0xff00ff00);
                 } else if (user_id != 0) {
                     if (choosenSoundPath != null && choosenSoundPath.equals(defaultPath)) {
@@ -320,22 +322,24 @@ public class NotificationsController {
                     } else if (choosenSoundPath == null) {
                         choosenSoundPath = preferences.getString("GlobalSoundPath", defaultPath);
                     }
-                    needVibrate = preferences.getInt("vibrate_messages", 0);
+                    needVibrate = preferences.getBoolean("EnableVibrateAll", true);
                     ledColor = preferences.getInt("MessagesLed", 0xff00ff00);
                 }
                 if (preferences.contains("color_" + dialog_id)) {
                     ledColor = preferences.getInt("color_" + dialog_id, 0);
                 }
 
-                if (needVibrate == 2 && (vibrate_override == 1 || vibrate_override == 3 || vibrate_override == 5) || needVibrate != 2 && vibrate_override == 2 || vibrate_override != 0) {
-                    needVibrate = vibrate_override;
+                if (!needVibrate && vibrate_override == 1) {
+                    needVibrate = true;
+                } else if (needVibrate && vibrate_override == 2) {
+                    needVibrate = false;
                 }
                 if (!ApplicationLoader.mainInterfacePaused) {
                     if (!inAppSounds) {
                         choosenSoundPath = null;
                     }
                     if (!inAppVibrate) {
-                        needVibrate = 2;
+                        needVibrate = false;
                     }
                 }
             }
@@ -519,6 +523,7 @@ public class NotificationsController {
                             pattern[i] = ((i % 2 != 0) ? duration : pause);
                         }
 
+                        FileLog.d("tmessages", "Vibrating with pattern " + Arrays.toString(pattern));
                         mBuilder.setVibrate(pattern);
                     }
                 } else {
