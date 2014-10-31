@@ -41,7 +41,7 @@ public class VideoTimelineView extends View {
     private VideoTimelineViewDelegate delegate = null;
     private ArrayList<Bitmap> frames = new ArrayList<Bitmap>();
     private AsyncTask<Integer, Integer, Bitmap> currentTask = null;
-    private static final Integer sync = 1;
+    private static final Object sync = new Object();
     private long frameTimeOffset = 0;
     private int frameWidth = 0;
     private int frameHeight = 0;
@@ -153,9 +153,13 @@ public class VideoTimelineView extends View {
 
     public void setVideoPath(String path) {
         mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(path);
-        String duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        videoLength = Long.parseLong(duration);
+        try {
+            mediaMetadataRetriever.setDataSource(path);
+            String duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            videoLength = Long.parseLong(duration);
+        } catch (Exception e) {
+            FileLog.e("tmessages", e);
+        }
     }
 
     public void setDelegate(VideoTimelineViewDelegate delegate) {

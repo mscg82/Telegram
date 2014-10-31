@@ -18,6 +18,7 @@ import android.content.res.Configuration;
 import android.text.format.DateFormat;
 import android.util.Xml;
 
+import org.telegram.android.time.FastDateFormat;
 import org.telegram.messenger.ConnectionsManager;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
@@ -212,6 +213,14 @@ public class LocaleController {
         localeInfo.name = "Português (Portugal)";
         localeInfo.nameEnglish = "Portuguese (Portugal)";
         localeInfo.shortName = "pt_PT";
+        localeInfo.pathToFile = null;
+        sortedLanguages.add(localeInfo);
+        languagesDict.put(localeInfo.shortName, localeInfo);
+
+        localeInfo = new LocaleInfo();
+        localeInfo.name = "한국어";
+        localeInfo.nameEnglish = "Korean";
+        localeInfo.shortName = "ko";
         localeInfo.pathToFile = null;
         sortedLanguages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
@@ -510,6 +519,19 @@ public class LocaleController {
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.remove("language");
                 editor.commit();
+
+                if (newLocale != null) {
+                    LocaleInfo info = null;
+                    if (newLocale.getLanguage() != null) {
+                        info = languagesDict.get(newLocale.getLanguage());
+                    }
+                    if (info == null) {
+                        info = languagesDict.get(getLocaleString(newLocale));
+                    }
+                    if (info == null) {
+                        newLocale = Locale.US;
+                    }
+                }
             }
             if (newLocale != null) {
                 if (localeInfo.pathToFile == null) {
@@ -663,14 +685,19 @@ public class LocaleController {
         } else if (dateDay + 1 == day && year == dateYear) {
             return String.format("%s %s %s", LocaleController.getString("LastSeen", R.string.LastSeen), LocaleController.getString("YesterdayAt", R.string.YesterdayAt), formatterDay.format(new Date(date * 1000)));
         } else if (year == dateYear) {
-            return String.format("%s %s %s %s", LocaleController.getString("LastSeenDate", R.string.LastSeenDate), formatterMonth.format(new Date(date * 1000)), LocaleController.getString("OtherAt", R.string.OtherAt), formatterDay.format(new Date(date * 1000)));
+            String format = LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, formatterMonth.format(new Date(date * 1000)), formatterDay.format(new Date(date * 1000)));
+            return String.format("%s %s", LocaleController.getString("LastSeenDate", R.string.LastSeenDate), format);
         } else {
-            return String.format("%s %s %s %s", LocaleController.getString("LastSeenDate", R.string.LastSeenDate), formatterYear.format(new Date(date * 1000)), LocaleController.getString("OtherAt", R.string.OtherAt), formatterDay.format(new Date(date * 1000)));
+            String format = LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, formatterYear.format(new Date(date * 1000)), formatterDay.format(new Date(date * 1000)));
+            return String.format("%s %s", LocaleController.getString("LastSeenDate", R.string.LastSeenDate), format);
         }
     }
 
     public void recreateFormatters() {
-        Locale locale = Locale.getDefault();
+        Locale locale = currentLocale;
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
         String lang = locale.getLanguage();
         if (lang == null) {
             lang = "en";
@@ -707,20 +734,28 @@ public class LocaleController {
         }
         chatFullDate = FastDateFormat.getInstance(formatString, locale);
 
-        formatterWeek = FastDateFormat.getInstance("EEE", locale);
+        formatString = getStringInternal("formatterWeek", R.string.formatterWeek);
+        if (formatString == null || formatString.length() == 0) {
+            formatString = "EEE";
+        }
+        formatterWeek = FastDateFormat.getInstance(formatString, locale);
 
-        if (lang != null) {
-            if (is24HourFormat) {
-                formatterDay = FastDateFormat.getInstance("HH:mm", locale);
-            } else {
-                if (lang.toLowerCase().equals("ar")) {
-                    formatterDay = FastDateFormat.getInstance("h:mm a", locale);
-                } else {
-                    formatterDay = FastDateFormat.getInstance("h:mm a", Locale.US);
-                }
-            }
+        if (is24HourFormat) {
+            formatString = getStringInternal("formatterDay24H", R.string.formatterDay24H);
         } else {
-            formatterDay = FastDateFormat.getInstance("h:mm a", Locale.US);
+            formatString = getStringInternal("formatterDay12H", R.string.formatterDay12H);
+        }
+        if (formatString == null || formatString.length() == 0) {
+            if (is24HourFormat) {
+                formatString = "HH:mm";
+            } else {
+                formatString = "h:mm a";
+            }
+        }
+        if (lang.toLowerCase().equals("ar") || lang.toLowerCase().equals("ko")) {
+            formatterDay = FastDateFormat.getInstance(formatString, locale);
+        } else {
+            formatterDay = FastDateFormat.getInstance(formatString, Locale.US);
         }
     }
 

@@ -9,12 +9,12 @@
 package org.telegram.messenger;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -28,7 +28,6 @@ import net.hockeyapp.android.CrashManager;
 import net.hockeyapp.android.CrashManagerListener;
 import net.hockeyapp.android.UpdateManager;
 
-import org.telegram.android.LocaleController;
 import org.telegram.ui.ApplicationLoader;
 
 import java.io.ByteArrayInputStream;
@@ -74,8 +73,6 @@ public class Utilities {
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
-    public static ProgressDialog progressDialog;
-
     static {
         try {
             File URANDOM_FILE = new File("/dev/urandom");
@@ -111,8 +108,8 @@ public class Utilities {
     }
 
     public native static long doPQNative(long _what);
-    public native static void loadBitmap(String path, int[] bitmap, int scale, int format, int width, int height);
-    public native static void blurBitmap(Object bitmap);
+    public native static void loadBitmap(String path, Bitmap bitmap, int scale);
+    public native static void blurBitmap(Object bitmap, int radius);
     public native static int convertVideoFrame(ByteBuffer src, ByteBuffer dest, int destFormat, int width, int height, int padding, int swap);
     private native static void aesIgeEncryption(ByteBuffer buffer, byte[] key, byte[] iv, boolean encrypt, int offset, int length);
 
@@ -427,34 +424,6 @@ public class Utilities {
         return packedData;
     }
 
-    public static void ShowProgressDialog(final Activity activity, final String message) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(!activity.isFinishing()) {
-                    progressDialog = new ProgressDialog(activity);
-                    if (message != null) {
-                        progressDialog.setMessage(message);
-                    }
-                    progressDialog.setCanceledOnTouchOutside(false);
-                    progressDialog.setCancelable(false);
-                    progressDialog.show();
-                }
-            }
-        });
-    }
-
-    public static void HideProgressDialog(Activity activity) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (progressDialog != null) {
-                    progressDialog.dismiss();
-                }
-            }
-        });
-    }
-
     public static boolean copyFile(InputStream sourceFile, File destFile) throws IOException {
         OutputStream out = new FileOutputStream(destFile);
         byte[] buf = new byte[4096];
@@ -530,7 +499,7 @@ public class Utilities {
     private static File getAlbumDir() {
         File storageDir = null;
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), LocaleController.getString("AppName", R.string.AppName));
+            storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Telegram");
             if (storageDir != null) {
                 if (!storageDir.mkdirs()) {
                     if (!storageDir.exists()){
@@ -644,7 +613,6 @@ public class Utilities {
         if (name == null && name2 == null) {
             return "";
         }
-        int index;
         SpannableStringBuilder builder = new SpannableStringBuilder();
         String wholeString = name;
         if (wholeString == null || wholeString.length() == 0) {
@@ -653,28 +621,34 @@ public class Utilities {
             wholeString += " " + name2;
         }
         wholeString = wholeString.trim();
-        String[] args = wholeString.split(" ");
+        String lower = " " + wholeString.toLowerCase();
 
-        for (String arg : args) {
-            String str = arg;
-            if (str != null) {
-                String lower = str.toLowerCase();
-                if (lower.startsWith(q)) {
-                    if (builder.length() != 0) {
-                        builder.append(" ");
-                    }
-                    String query = str.substring(0, q.length());
-                    builder.append(Html.fromHtml("<font color=\"#357aa8\">" + query + "</font>"));
-                    str = str.substring(q.length());
-                    builder.append(str);
-                } else {
-                    if (builder.length() != 0) {
-                        builder.append(" ");
-                    }
-                    builder.append(str);
-                }
+        int index = -1;
+        int lastIndex = 0;
+        while ((index = lower.indexOf(" " + q, lastIndex)) != -1) {
+            int idx = index - (index == 0 ? 0 : 1);
+            int end = q.length() + (index == 0 ? 0 : 1) + idx;
+
+            if (lastIndex != 0 && lastIndex != idx + 1) {
+                builder.append(wholeString.substring(lastIndex, idx));
+            } else if (lastIndex == 0 && idx != 0) {
+                builder.append(wholeString.substring(0, idx));
             }
+
+            String query = wholeString.substring(idx, end);
+            if (query.startsWith(" ")) {
+                builder.append(" ");
+            }
+            query.trim();
+            builder.append(Html.fromHtml("<font color=\"#357aa8\">" + query + "</font>"));
+
+            lastIndex = end;
         }
+
+        if (lastIndex != -1 && lastIndex != wholeString.length()) {
+            builder.append(wholeString.substring(lastIndex, wholeString.length()));
+        }
+
         return builder;
     }
 

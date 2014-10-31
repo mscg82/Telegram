@@ -14,7 +14,6 @@ import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.os.PowerManager;
 import android.util.Base64;
 
 import org.telegram.android.AndroidUtilities;
@@ -82,8 +81,6 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
     private boolean appPaused = true;
 
     private volatile long nextCallToken = 1;
-
-    private PowerManager.WakeLock wakeLock = null;
 
     private static volatile ConnectionsManager Instance = null;
     public static ConnectionsManager getInstance() {
@@ -217,10 +214,6 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
         }
 
         Utilities.stageQueue.postRunnable(stageRunnable, 1000);
-
-        PowerManager pm = (PowerManager)ApplicationLoader.applicationContext.getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "lock");
-        wakeLock.setReferenceCounted(false);
     }
 
     public int getConnectionState() {
@@ -833,7 +826,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                 }
                 object = invoke;
             }
-            TLRPC.invokeWithLayer14 invoke = new TLRPC.invokeWithLayer14();
+            TLRPC.invokeWithLayer18 invoke = new TLRPC.invokeWithLayer18();
             invoke.query = object;
             FileLog.d("wrap in layer", "" + object);
             return invoke;
@@ -995,6 +988,10 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
 
     public int getCurrentTime() {
         return (int)(System.currentTimeMillis() / 1000) + timeDifference;
+    }
+
+    public int getTimeDifference() {
+        return timeDifference;
     }
 
     private void processRequestQueue(int requestClass, int _datacenterId) {
@@ -1382,7 +1379,9 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                     if (rawRequest != null && (rawRequest instanceof TLRPC.TL_messages_sendMessage ||
                             rawRequest instanceof TLRPC.TL_messages_sendMedia ||
                             rawRequest instanceof TLRPC.TL_messages_forwardMessages ||
-                            rawRequest instanceof TLRPC.TL_messages_sendEncrypted)) {
+                            rawRequest instanceof TLRPC.TL_messages_sendEncrypted ||
+                            rawRequest instanceof TLRPC.TL_messages_sendEncryptedFile ||
+                            rawRequest instanceof TLRPC.TL_messages_sendEncryptedService)) {
 
                         if (rawRequest instanceof TLRPC.TL_messages_sendMessage) {
                             hasSendMessage = true;
@@ -1400,7 +1399,9 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                                 if (currentRawRequest instanceof TLRPC.TL_messages_sendMessage ||
                                         currentRawRequest instanceof TLRPC.TL_messages_sendMedia ||
                                         currentRawRequest instanceof TLRPC.TL_messages_forwardMessages ||
-                                        currentRawRequest instanceof TLRPC.TL_messages_sendEncrypted) {
+                                        currentRawRequest instanceof TLRPC.TL_messages_sendEncrypted ||
+                                        currentRawRequest instanceof TLRPC.TL_messages_sendEncryptedFile ||
+                                        currentRawRequest instanceof TLRPC.TL_messages_sendEncryptedService) {
                                     currentRequests.add(currentMessage.msg_id);
                                 }
                             }
@@ -1410,7 +1411,9 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                                 if (request.rawRequest instanceof TLRPC.TL_messages_sendMessage ||
                                         request.rawRequest instanceof TLRPC.TL_messages_sendMedia ||
                                         request.rawRequest instanceof TLRPC.TL_messages_forwardMessages ||
-                                        request.rawRequest instanceof TLRPC.TL_messages_sendEncrypted) {
+                                        request.rawRequest instanceof TLRPC.TL_messages_sendEncrypted ||
+                                        request.rawRequest instanceof TLRPC.TL_messages_sendEncryptedFile ||
+                                        request.rawRequest instanceof TLRPC.TL_messages_sendEncryptedService) {
                                     if (!currentRequests.contains(request.runningMessageId)) {
                                         maxRequestId = Math.max(maxRequestId, request.runningMessageId);
                                     }
@@ -1604,12 +1607,12 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
             TLRPC.TL_protoMessage message = networkMessage.protoMessage;
 
             if (BuildVars.DEBUG_VERSION) {
-                if (message.body instanceof TLRPC.invokeWithLayer14) {
-                    FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer14)message.body).query);
+                if (message.body instanceof TLRPC.invokeWithLayer18) {
+                    FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer18)message.body).query);
                 } else if (message.body instanceof TLRPC.initConnection) {
                     TLRPC.initConnection r = (TLRPC.initConnection)message.body;
-                    if (r.query instanceof TLRPC.invokeWithLayer14) {
-                        FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer14)r.query).query);
+                    if (r.query instanceof TLRPC.invokeWithLayer18) {
+                        FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer18)r.query).query);
                     } else {
                         FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + r.query);
                     }
@@ -1644,12 +1647,12 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                 TLRPC.TL_protoMessage message = networkMessage.protoMessage;
                 containerMessages.add(message);
                 if (BuildVars.DEBUG_VERSION) {
-                    if (message.body instanceof TLRPC.invokeWithLayer14) {
-                        FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer14)message.body).query);
+                    if (message.body instanceof TLRPC.invokeWithLayer18) {
+                        FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer18)message.body).query);
                     } else if (message.body instanceof TLRPC.initConnection) {
                         TLRPC.initConnection r = (TLRPC.initConnection)message.body;
-                        if (r.query instanceof TLRPC.invokeWithLayer14) {
-                            FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer14)r.query).query);
+                        if (r.query instanceof TLRPC.invokeWithLayer18) {
+                            FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + ((TLRPC.invokeWithLayer18)r.query).query);
                         } else {
                             FileLog.d("tmessages", connection.getSissionId() + ":DC" + datacenter.datacenterId + "> Send message (" + message.seqno + ", " + message.msg_id + "): " + r.query);
                         }
@@ -2066,12 +2069,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                                 int errorCode = ((TLRPC.RpcError) resultContainer.result).error_code;
 
                                 if (errorCode == 500 || errorCode < 0) {
-                                    if ((request.flags & RPCRequest.RPCRequestClassFailOnServerErrors) != 0) {
-                                        if (request.serverFailureCount < 1) {
-                                            discardResponse = true;
-                                            request.runningMinStartTime = request.runningStartTime + 1;
-                                        }
-                                    } else {
+                                    if ((request.flags & RPCRequest.RPCRequestClassFailOnServerErrors) == 0) {
                                         discardResponse = true;
                                         int delay = Math.min(1, request.serverFailureCount * 2);
                                         request.runningMinStartTime = request.runningStartTime + delay;
@@ -2134,14 +2132,6 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                                 } else {
                                     if (resultContainer.result instanceof TLRPC.updates_Difference) {
                                         pushMessagesReceived = true;
-                                        AndroidUtilities.RunOnUIThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (wakeLock.isHeld()) {
-                                                    wakeLock.release();
-                                                }
-                                            }
-                                        });
                                     }
                                     request.completionBlock.run(resultContainer.result, null);
                                 }
@@ -2312,23 +2302,9 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                 if (paused) {
                     pushMessagesReceived = false;
                 }
-                AndroidUtilities.RunOnUIThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        wakeLock.acquire(20000);
-                    }
-                });
                 resumeNetworkInternal();
             } else {
                 pushMessagesReceived = true;
-                AndroidUtilities.RunOnUIThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (wakeLock.isHeld()) {
-                            wakeLock.release();
-                        }
-                    }
-                });
                 MessagesController.getInstance().processUpdates((TLRPC.Updates) message, false);
             }
         } else {
@@ -2433,6 +2409,7 @@ public class ConnectionsManager implements Action.ActionDelegate, TcpConnection.
                 }
             });
         } else if ((connection.transportRequestClass & RPCRequest.RPCRequestClassPush) != 0) {
+            FileLog.e("tmessages", "call connection closed");
             sendingPushPing = false;
             lastPushPingTime = System.currentTimeMillis() - 60000 * 3 + 4000;
         }
