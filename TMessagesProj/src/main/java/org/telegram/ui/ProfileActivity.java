@@ -446,6 +446,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else if (i == settingsNotificationsRow) {
                         Bundle args = new Bundle();
                         if (user_id != 0) {
+                            args.putLong("user_id", user_id);
                             args.putLong("dialog_id", dialog_id == 0 ? user_id : dialog_id);
                         } else if (chat_id != 0) {
                             args.putLong("dialog_id", -chat_id);

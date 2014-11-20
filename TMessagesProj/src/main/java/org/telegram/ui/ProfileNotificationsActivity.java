@@ -159,10 +159,10 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                     } else if (i == settingsVibrationSpeedRow) {
                         final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
                         final String key;
-                        if ((int)dialog_id < 0) {
-                            key = "VibrationSpeedGroup_" + (-dialog_id);
-                        } else {
+                        if (user_id != 0) {
                             key = "VibrationSpeed_" + (user_id);
+                        } else {
+                            key = "VibrationSpeedGroup_" + Math.abs(dialog_id);
                         }
 
                         VibrationOptions.VibrationSpeed[] vibrationSpeeds = VibrationOptions.VibrationSpeed.values();
@@ -208,10 +208,10 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                     } else if (i == settingsVibrationCountRow) {
                         final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
                         final String key;
-                        if ((int)dialog_id < 0) {
-                            key = "VibrationCountGroup_" + (-dialog_id);
-                        } else {
+                        if (user_id != 0) {
                             key = "VibrationCount_" + (user_id);
+                        } else {
+                            key = "VibrationCountGroup_" + Math.abs(dialog_id);
                         }
 
                         String counts[] = new String[11];
@@ -494,7 +494,6 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                     }
                     textCell.setTextAndValue(LocaleController.getString("Sound", R.string.Sound), value, true);
                 } else if(i == settingsVibrationSpeedRow) {
-                    textCell.setTextAndValue(LocaleController.getString("Notifications", R.string.Notifications), LocaleController.getString("VibrateSpeed", R.string.VibrateSpeed), true);
                     String key;
                     if ((int)dialog_id < 0) {
                         key = "VibrationSpeedGroup_" + (-dialog_id);
@@ -502,15 +501,16 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                         key = "VibrationSpeed_" + (user_id);
                     }
                     int storedValue = preferences.getInt(key, -1);
+                    String value;
                     if(storedValue == -1) {
-                        textCell.setTextAndValue(LocaleController.getString("Notifications", R.string.Notifications), LocaleController.getString("Default", R.string.Default), true);
+                        value = LocaleController.getString("Default", R.string.Default);
                     }
                     else {
                         VibrationOptions.VibrationSpeed speed = VibrationOptions.VibrationSpeed.fromValue(storedValue);
-                        textCell.setTextAndValue(LocaleController.getString("Notifications", R.string.Notifications), LocaleController.getString(speed.getLocaleKey(), speed.getResourceId()), true);
+                        value = LocaleController.getString(speed.getLocaleKey(), speed.getResourceId());
                     }
+                    textCell.setTextAndValue(LocaleController.getString("VibrateSpeed", R.string.VibrateSpeed), value, true);
                 } else if(i == settingsVibrationCountRow) {
-                    textCell.setTextAndValue(LocaleController.getString("Notifications", R.string.Notifications), LocaleController.getString("VibrateCount", R.string.VibrateCount), true);
                     String key;
                     if ((int)dialog_id < 0) {
                         key = "VibrationCountGroup_" + (-dialog_id);
@@ -518,12 +518,14 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                         key = "VibrationCount_" + (user_id);
                     }
                     int storedValue = preferences.getInt(key, -1);
+                    String value;
                     if(storedValue == -1) {
-                        textCell.setTextAndValue(LocaleController.getString("Notifications", R.string.Notifications), LocaleController.getString("Default", R.string.Default), true);
+                        value = LocaleController.getString("Default", R.string.Default);
                     }
                     else {
-                        textCell.setTextAndValue(LocaleController.getString("Notifications", R.string.Notifications), String.valueOf(storedValue), true);
+                        value = String.valueOf(storedValue);
                     }
+                    textCell.setTextAndValue(LocaleController.getString("VibrateCount", R.string.VibrateCount), value, true);
                 }
             } else if (type == 1) {
                 if (view == null) {

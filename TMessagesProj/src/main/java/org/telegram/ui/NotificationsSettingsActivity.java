@@ -99,16 +99,18 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         messagePreviewRow = rowCount++;
         messageLedRow = rowCount++;
         messageVibrateRow = rowCount++;
+        messageVibrationSpeedRow = rowCount++;
+        messageVibrationCountRow = rowCount++;
         messagePopupNotificationRow = rowCount++;
         messageSoundRow = rowCount++;
         groupSectionRow2 = rowCount++;
         groupSectionRow = rowCount++;
         groupAlertRow = rowCount++;
         groupPreviewRow = rowCount++;
-        groupVibrationSpeedRow = rowCount++;
-        groupVibrationCountRow = rowCount++;
         groupLedRow = rowCount++;
         groupVibrateRow = rowCount++;
+        groupVibrationSpeedRow = rowCount++;
+        groupVibrationCountRow = rowCount++;
         groupPopupNotificationRow = rowCount++;
         groupSoundRow = rowCount++;
         inappSectionRow2 = rowCount++;
@@ -197,7 +199,6 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     } else if (i == messageVibrateRow || i == groupVibrateRow) {
                         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = preferences.edit();
-                        boolean enabled;
                         if (i == messageVibrateRow) {
                             enabled = preferences.getBoolean("EnableVibrateAll", true);
                             editor.putBoolean("EnableVibrateAll", !enabled);
@@ -687,6 +688,10 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     checkCell.setTextAndCheck(LocaleController.getString("NotificationsService", R.string.NotificationsService), preferences.getBoolean("pushService", true), false);
                 } else if (i == badgeNumberRow) {
                     checkCell.setTextAndCheck(LocaleController.getString("BadgeNumber", R.string.BadgeNumber), preferences.getBoolean("badgeNumber", true), true);
+                } else if (i == messageVibrateRow) {
+                    checkCell.setTextAndCheck(LocaleController.getString("Vibrate", R.string.Vibrate), preferences.getBoolean("EnableVibrateAll", true), true);
+                }  else if (i == groupVibrateRow) {
+                    checkCell.setTextAndCheck(LocaleController.getString("Vibrate", R.string.Vibrate), preferences.getBoolean("EnableVibrateGroup", true), true);
                 }
             } else if (type == 2) {
                 if (view == null) {
@@ -747,23 +752,6 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         value = LocaleController.getString("AlwaysShowPopup", R.string.AlwaysShowPopup);
                     }
                     textCell.setTextAndValue(LocaleController.getString("PopupNotification", R.string.PopupNotification), value, true);
-                } else if (i == messageVibrateRow || i == groupVibrateRow) {
-                    textCell.setMultilineDetail(false);
-                    int value = 0;
-                    if (i == messageVibrateRow) {
-                        value = preferences.getInt("vibrate_messages", 0);
-                    } else if (i == groupVibrateRow) {
-                        value = preferences.getInt("vibrate_group", 0);
-                    }
-                    if (value == 0) {
-                        textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Default", R.string.Default), true);
-                    } else if (value == 1) {
-                        textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Short", R.string.Short), true);
-                    } else if (value == 2) {
-                        textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Disabled", R.string.Disabled), true);
-                    } else if (value == 3) {
-                        textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Long", R.string.Long), true);
-                    }
                 }
             } else if (type == 3) {
                 if (view == null) {
@@ -796,7 +784,8 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
             }  else if (i == messageAlertRow || i == messagePreviewRow || i == groupAlertRow ||
                     i == groupPreviewRow || i == inappSoundRow || i == inappVibrateRow ||
                     i == inappPreviewRow || i == contactJoinedRow || i == pebbleAlertRow ||
-                    i == notificationsServiceRow || i == badgeNumberRow) {
+                    i == notificationsServiceRow || i == badgeNumberRow ||
+                    i == messageVibrateRow || i == groupVibrateRow) {
                 return 1;
             } else if (i == messageLedRow || i == groupLedRow) {
                 return 3;
