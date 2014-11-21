@@ -17,6 +17,7 @@ import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -63,6 +64,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     private int messageSoundRow;
     private int messageLedRow;
     private int messagePopupNotificationRow;
+    private int messagePriorityRow;
     private int groupSectionRow2;
     private int groupSectionRow;
     private int groupAlertRow;
@@ -73,11 +75,13 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     private int groupSoundRow;
     private int groupLedRow;
     private int groupPopupNotificationRow;
+    private int groupPriorityRow;
     private int inappSectionRow2;
     private int inappSectionRow;
     private int inappSoundRow;
     private int inappVibrateRow;
     private int inappPreviewRow;
+    private int inappPriorityRow;
     private int eventsSectionRow2;
     private int eventsSectionRow;
     private int contactJoinedRow;
@@ -85,6 +89,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     private int otherSectionRow;
     private int badgeNumberRow;
     private int pebbleAlertRow;
+    private int repeatRow;
     private int resetSectionRow2;
     private int resetSectionRow;
     private int resetNotificationsRow;
@@ -103,6 +108,11 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         messageVibrationCountRow = rowCount++;
         messagePopupNotificationRow = rowCount++;
         messageSoundRow = rowCount++;
+        if (Build.VERSION.SDK_INT >= 21) {
+            messagePriorityRow = rowCount++;
+        } else {
+            messagePriorityRow = -1;
+        }
         groupSectionRow2 = rowCount++;
         groupSectionRow = rowCount++;
         groupAlertRow = rowCount++;
@@ -113,11 +123,21 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         groupVibrationCountRow = rowCount++;
         groupPopupNotificationRow = rowCount++;
         groupSoundRow = rowCount++;
+        if (Build.VERSION.SDK_INT >= 21) {
+            groupPriorityRow = rowCount++;
+        } else {
+            groupPriorityRow = -1;
+        }
         inappSectionRow2 = rowCount++;
         inappSectionRow = rowCount++;
         inappSoundRow = rowCount++;
         inappVibrateRow = rowCount++;
         inappPreviewRow = rowCount++;
+        if (Build.VERSION.SDK_INT >= 21) {
+            inappPriorityRow = rowCount++;
+        } else {
+            inappPriorityRow = -1;
+        }
         eventsSectionRow2 = rowCount++;
         eventsSectionRow = rowCount++;
         contactJoinedRow = rowCount++;
@@ -125,6 +145,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         otherSectionRow = rowCount++;
         badgeNumberRow = rowCount++;
         pebbleAlertRow = rowCount++;
+        repeatRow = rowCount++;
         resetSectionRow2 = rowCount++;
         resetSectionRow = rowCount++;
         resetNotificationsRow = rowCount++;
@@ -227,25 +248,25 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         int currentSpeedIndex = currentSpeed.getValue();
 
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity())
-                            .setTitle(LocaleController.getString("VibrateSpeedTitle", R.string.VibrateSpeedTitle))
-                            .setSingleChoiceItems(speeds, currentSpeedIndex, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    VibrationOptions.VibrationSpeed selectedSpeed = VibrationOptions.VibrationSpeed.fromValue(which);
+                                .setTitle(LocaleController.getString("VibrateSpeedTitle", R.string.VibrateSpeedTitle))
+                                .setSingleChoiceItems(speeds, currentSpeedIndex, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        VibrationOptions.VibrationSpeed selectedSpeed = VibrationOptions.VibrationSpeed.fromValue(which);
 
-                                    SharedPreferences.Editor editor = preferences.edit();
-                                    if (index == messageVibrationSpeedRow) {
-                                        editor.putInt("VibrationSpeed", selectedSpeed.getValue());
-                                    } else if (index == groupVibrationSpeedRow) {
-                                        editor.putInt("VibrationSpeedGroup", selectedSpeed.getValue());
+                                        SharedPreferences.Editor editor = preferences.edit();
+                                        if (index == messageVibrationSpeedRow) {
+                                            editor.putInt("VibrationSpeed", selectedSpeed.getValue());
+                                        } else if (index == groupVibrationSpeedRow) {
+                                            editor.putInt("VibrationSpeedGroup", selectedSpeed.getValue());
+                                        }
+                                        editor.commit();
+                                        listView.invalidateViews();
+
+                                        dialog.dismiss();
                                     }
-                                    editor.commit();
-                                    listView.invalidateViews();
-
-                                    dialog.dismiss();
-                                }
-                            })
-                            .setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                                })
+                                .setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                         builder.show().setCanceledOnTouchOutside(true);
                     } else if (i == messageVibrationCountRow || i == groupVibrationCountRow) {
                         final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
@@ -262,24 +283,24 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                             counts[j] = String.valueOf(j + 1);
 
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity())
-                            .setTitle(LocaleController.getString("VibrateCountTitle", R.string.VibrateCountTitle))
-                            .setSingleChoiceItems(counts, count - 1, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    int selectedCount = which + 1;
+                                .setTitle(LocaleController.getString("VibrateCountTitle", R.string.VibrateCountTitle))
+                                .setSingleChoiceItems(counts, count - 1, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        int selectedCount = which + 1;
 
-                                    SharedPreferences.Editor editor = preferences.edit();
-                                    if (index == messageVibrationCountRow) {
-                                        editor.putInt("VibrationCount", selectedCount);
-                                    } else if (index == groupVibrationCountRow) {
-                                        editor.putInt("VibrationCountGroup", selectedCount);
+                                        SharedPreferences.Editor editor = preferences.edit();
+                                        if (index == messageVibrationCountRow) {
+                                            editor.putInt("VibrationCount", selectedCount);
+                                        } else if (index == groupVibrationCountRow) {
+                                            editor.putInt("VibrationCountGroup", selectedCount);
+                                        }
+                                        editor.commit();
+                                        listView.invalidateViews();
+
+                                        dialog.dismiss();
                                     }
-                                    editor.commit();
-                                    listView.invalidateViews();
-
-                                    dialog.dismiss();
-                                }
-                            }).setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                                }).setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                         builder.show().setCanceledOnTouchOutside(true);
                     } else if (i == messageSoundRow || i == groupSoundRow) {
                         try {
@@ -366,6 +387,12 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         SharedPreferences.Editor editor = preferences.edit();
                         enabled = preferences.getBoolean("EnableInAppPreview", true);
                         editor.putBoolean("EnableInAppPreview", !enabled);
+                        editor.commit();
+                    } else if (i == inappPriorityRow) {
+                        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        enabled = preferences.getBoolean("EnableInAppPriority", false);
+                        editor.putBoolean("EnableInAppPriority", !enabled);
                         editor.commit();
                     } else if (i == contactJoinedRow) {
                         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
@@ -614,9 +641,9 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
             }
             else
                 return !(i == messageSectionRow || i == groupSectionRow || i == inappSectionRow ||
-                    i == eventsSectionRow || i == otherSectionRow || i == resetSectionRow ||
-                    i == messageSectionRow2 || i == eventsSectionRow2 || i == groupSectionRow2 ||
-                    i == inappSectionRow2 || i == otherSectionRow2 || i == resetSectionRow2);
+                        i == eventsSectionRow || i == otherSectionRow || i == resetSectionRow ||
+                        i == messageSectionRow2 || i == eventsSectionRow2 || i == groupSectionRow2 ||
+                        i == inappSectionRow2 || i == otherSectionRow2 || i == resetSectionRow2);
         }
 
         @Override
@@ -679,11 +706,13 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                 } else if (i == inappVibrateRow) {
                     checkCell.setTextAndCheck(LocaleController.getString("InAppVibrate", R.string.InAppVibrate), preferences.getBoolean("EnableInAppVibrate", true), true);
                 } else if (i == inappPreviewRow) {
-                    checkCell.setTextAndCheck(LocaleController.getString("InAppPreview", R.string.InAppPreview), preferences.getBoolean("EnableInAppPreview", true), false);
+                    checkCell.setTextAndCheck(LocaleController.getString("InAppPreview", R.string.InAppPreview), preferences.getBoolean("EnableInAppPreview", true), true);
+                } else if (i == inappPriorityRow) {
+                    checkCell.setTextAndCheck(LocaleController.getString("NotificationsPriority", R.string.NotificationsPriority), preferences.getBoolean("EnableInAppPriority", false), false);
                 } else if (i == contactJoinedRow) {
                     checkCell.setTextAndCheck(LocaleController.getString("ContactJoined", R.string.ContactJoined), preferences.getBoolean("EnableContactJoined", true), false);
                 } else if (i == pebbleAlertRow) {
-                    checkCell.setTextAndCheck(LocaleController.getString("Pebble", R.string.Pebble), preferences.getBoolean("EnablePebbleNotifications", false), false);
+                    checkCell.setTextAndCheck(LocaleController.getString("Pebble", R.string.Pebble), preferences.getBoolean("EnablePebbleNotifications", false), true);
                 } else if (i == notificationsServiceRow) {
                     checkCell.setTextAndCheck(LocaleController.getString("NotificationsService", R.string.NotificationsService), preferences.getBoolean("pushService", true), false);
                 } else if (i == badgeNumberRow) {
@@ -713,7 +742,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     if (value.equals("NoSound")) {
                         value = LocaleController.getString("NoSound", R.string.NoSound);
                     }
-                    textCell.setTextAndValue(LocaleController.getString("Sound", R.string.Sound), value, false);
+                    textCell.setTextAndValue(LocaleController.getString("Sound", R.string.Sound), value, true);
                 } else if (i == messageVibrationSpeedRow || i == groupVibrationSpeedRow) {
                     VibrationOptions.VibrationSpeed speed = VibrationOptions.VibrationSpeed.getDefault();
                     if (i == messageVibrationSpeedRow) {
@@ -784,7 +813,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
             }  else if (i == messageAlertRow || i == messagePreviewRow || i == groupAlertRow ||
                     i == groupPreviewRow || i == inappSoundRow || i == inappVibrateRow ||
                     i == inappPreviewRow || i == contactJoinedRow || i == pebbleAlertRow ||
-                    i == notificationsServiceRow || i == badgeNumberRow ||
+                    i == notificationsServiceRow || i == badgeNumberRow || i == inappPriorityRow ||
                     i == messageVibrateRow || i == groupVibrateRow) {
                 return 1;
             } else if (i == messageLedRow || i == groupLedRow) {

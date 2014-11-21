@@ -145,6 +145,9 @@ public class ChatActivityEnterView implements NotificationCenter.NotificationCen
 
         sendButton = (ImageButton) containerView.findViewById(R.id.chat_send_button);
         sendButton.setVisibility(View.INVISIBLE);
+        ViewProxy.setScaleX(sendButton, 0.1f);
+        ViewProxy.setScaleY(sendButton, 0.1f);
+        ViewProxy.setAlpha(sendButton, 0.0f);
         emojiButton = (ImageView) containerView.findViewById(R.id.chat_smile_button);
         audioSendButton = (ImageButton) containerView.findViewById(R.id.chat_audio_send_button);
         recordPanel = containerView.findViewById(R.id.record_panel);
@@ -391,9 +394,11 @@ public class ChatActivityEnterView implements NotificationCenter.NotificationCen
                         });
                         runningAnimation2.start();
 
-                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messsageEditText.getLayoutParams();
-                        layoutParams.rightMargin = AndroidUtilities.dp(0);
-                        messsageEditText.setLayoutParams(layoutParams);
+                        if (messsageEditText != null) {
+                            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messsageEditText.getLayoutParams();
+                            layoutParams.rightMargin = AndroidUtilities.dp(0);
+                            messsageEditText.setLayoutParams(layoutParams);
+                        }
 
                         delegate.onAttachButtonHidden();
                     }
@@ -470,9 +475,11 @@ public class ChatActivityEnterView implements NotificationCenter.NotificationCen
                     runningAnimation2.setDuration(100);
                     runningAnimation2.start();
 
-                    FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messsageEditText.getLayoutParams();
-                    layoutParams.rightMargin = AndroidUtilities.dp(50);
-                    messsageEditText.setLayoutParams(layoutParams);
+                    if (messsageEditText != null) {
+                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messsageEditText.getLayoutParams();
+                        layoutParams.rightMargin = AndroidUtilities.dp(50);
+                        messsageEditText.setLayoutParams(layoutParams);
+                    }
 
                     delegate.onAttachButtonShow();
                 }

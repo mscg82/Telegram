@@ -8,6 +8,7 @@
 
 package org.telegram.android;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -238,8 +239,10 @@ public class NotificationsController {
         try {
             AlarmManager alarm = (AlarmManager) ApplicationLoader.applicationContext.getSystemService(Context.ALARM_SERVICE);
             PendingIntent pintent = PendingIntent.getService(ApplicationLoader.applicationContext, 0, new Intent(ApplicationLoader.applicationContext, NotificationRepeat.class), 0);
-            if (personal_count > 0) {
-                alarm.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 60 * 60 * 1000, pintent);
+            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
+            int minutes = preferences.getInt("repeat_messages", 60);
+            if (minutes > 0 || personal_count > 0) {
+                alarm.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + minutes * 60 * 1000, pintent);
             } else {
                 alarm.cancel(pintent);
             }
@@ -292,6 +295,9 @@ public class NotificationsController {
             boolean inAppSounds = false;
             boolean inAppVibrate = false;
             boolean inAppPreview = false;
+            boolean inAppPriority = false;
+            int priority = 0;
+            int priority_override = 0;
             int vibrate_override = 0;
 
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Context.MODE_PRIVATE);
@@ -305,7 +311,9 @@ public class NotificationsController {
                 inAppSounds = preferences.getBoolean("EnableInAppSounds", true);
                 inAppVibrate = preferences.getBoolean("EnableInAppVibrate", true);
                 inAppPreview = preferences.getBoolean("EnableInAppPreview", true);
+                inAppPriority = preferences.getBoolean("EnableInAppPriority", false);
                 vibrate_override = preferences.getInt("vibrate_" + dialog_id, 0);
+                priority_override = preferences.getInt("priority_" + dialog_id, 3);
 
                 choosenSoundPath = preferences.getString("sound_path_" + dialog_id, null);
                 if (chat_id != 0) {
@@ -315,6 +323,7 @@ public class NotificationsController {
                         choosenSoundPath = preferences.getString("GroupSoundPath", defaultPath);
                     }
                     needVibrate = preferences.getBoolean("EnableVibrateGroup", true);
+                    priority = preferences.getInt("priority_group", 1);
                     ledColor = preferences.getInt("GroupLed", 0xff00ff00);
                 } else if (user_id != 0) {
                     if (choosenSoundPath != null && choosenSoundPath.equals(defaultPath)) {
@@ -323,10 +332,15 @@ public class NotificationsController {
                         choosenSoundPath = preferences.getString("GlobalSoundPath", defaultPath);
                     }
                     needVibrate = preferences.getBoolean("EnableVibrateAll", true);
+                    priority = preferences.getInt("priority_group", 1);
                     ledColor = preferences.getInt("MessagesLed", 0xff00ff00);
                 }
                 if (preferences.contains("color_" + dialog_id)) {
                     ledColor = preferences.getInt("color_" + dialog_id, 0);
+                }
+
+                if (priority_override != 3) {
+                    priority = priority_override;
                 }
 
                 if (!needVibrate && vibrate_override == 1) {
@@ -340,6 +354,11 @@ public class NotificationsController {
                     }
                     if (!inAppVibrate) {
                         needVibrate = false;
+                    }
+                    if (!inAppPriority) {
+                        priority = 0;
+                    } else if (priority == 2) {
+                        priority = 1;
                     }
                 }
             }
@@ -417,6 +436,14 @@ public class NotificationsController {
                     .setContentIntent(contentIntent)
                     .setGroup("messages")
                     .setGroupSummary(true);
+
+            if (priority == 0) {
+                mBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+            } else if (priority == 1) {
+                mBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+            } else if (priority == 2) {
+                mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
+            }
 
             String lastMessage = null;
             String lastMessageFull = null;
