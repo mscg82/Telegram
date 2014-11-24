@@ -241,7 +241,7 @@ public class NotificationsController {
             PendingIntent pintent = PendingIntent.getService(ApplicationLoader.applicationContext, 0, new Intent(ApplicationLoader.applicationContext, NotificationRepeat.class), 0);
             SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             int minutes = preferences.getInt("repeat_messages", 60);
-            if (minutes > 0 || personal_count > 0) {
+            if (minutes > 0 && personal_count > 0) {
                 alarm.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + minutes * 60 * 1000, pintent);
             } else {
                 alarm.cancel(pintent);
@@ -444,6 +444,12 @@ public class NotificationsController {
             } else if (priority == 2) {
                 mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
             }
+
+            mBuilder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
+            mBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            /*Bundle bundle = new Bundle();
+            bundle.putString(NotificationCompat.EXTRA_PEOPLE, );
+            mBuilder.setExtras()*/
 
             String lastMessage = null;
             String lastMessageFull = null;
@@ -673,7 +679,8 @@ public class NotificationsController {
                     .setContentText(text)
                     .setGroupSummary(false)
                     .setContentIntent(contentIntent)
-                    .extend(new NotificationCompat.WearableExtender().addAction(action));
+                    .extend(new NotificationCompat.WearableExtender().addAction(action))
+                    .setCategory(NotificationCompat.CATEGORY_MESSAGE);
 
             notificationManager.notify(notificationId, builder.build());
             wearNoticationsIds.put(dialog_id, notificationId);
