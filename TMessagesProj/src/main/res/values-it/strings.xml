@@ -308,6 +308,7 @@
     <string name="NotificationsOther">Altro</string>
     <string name="NotificationsDisabled">Disabilitate</string>
     <string name="VibrationDisabled">Disabilitata</string>
+    <string name="VibrationEnabled">Abilitata</string>
     <!--passcode view-->
     <string name="Passcode">Codice</string>
     <string name="ChangePasscode">Cambia codice</string>
