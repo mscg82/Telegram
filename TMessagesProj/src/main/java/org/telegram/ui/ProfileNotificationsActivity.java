@@ -142,8 +142,12 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                         builder.setTitle(title);
                         builder.setSingleChoiceItems(new CharSequence[] {
                                 LocaleController.getString("Default", R.string.Default),
-                                LocaleController.getString("Enabled", R.string.Enabled),
-                                LocaleController.getString("Disabled", R.string.Disabled)
+                                i == settingsVibrateRow ?
+                                        LocaleController.getString("VibrationEnabled", R.string.VibrationEnabled) :
+                                        LocaleController.getString("Enabled", R.string.Enabled),
+                                i == settingsVibrateRow ?
+                                        LocaleController.getString("VibrationDisabled", R.string.VibrationDisabled) :
+                                        LocaleController.getString("NotificationsDisabled", R.string.NotificationsDisabled)
                         }, storedValue, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface d, int which) {
