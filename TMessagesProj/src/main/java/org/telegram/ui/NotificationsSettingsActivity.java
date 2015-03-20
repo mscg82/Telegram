@@ -476,7 +476,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                                 listView.invalidateViews();
                             }
                         });
-                        builder.setNeutralButton(LocaleController.getString("Disabled", R.string.Disabled), new DialogInterface.OnClickListener() {
+                        builder.setNeutralButton(LocaleController.getString("LedDisabled", R.string.LedDisabled), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
@@ -544,7 +544,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("RepeatNotifications", R.string.RepeatNotifications));
                         builder.setItems(new CharSequence[] {
-                                LocaleController.getString("ShortMessageLifetimeForever", R.string.ShortMessageLifetimeForever),
+                                LocaleController.getString("RepeatDisabled", R.string.RepeatDisabled),
                                 LocaleController.formatPluralString("Minutes", 5),
                                 LocaleController.formatPluralString("Minutes", 10),
                                 LocaleController.formatPluralString("Minutes", 30),
