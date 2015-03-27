@@ -82,6 +82,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
     private int inappSoundRow;
     private int inappVibrateRow;
     private int inappPreviewRow;
+    private int inchatSoundRow;
     private int inappPriorityRow;
     private int eventsSectionRow2;
     private int eventsSectionRow;
@@ -134,6 +135,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
         inappSoundRow = rowCount++;
         inappVibrateRow = rowCount++;
         inappPreviewRow = rowCount++;
+        inchatSoundRow = rowCount++;
         if (Build.VERSION.SDK_INT >= 21) {
             inappPriorityRow = rowCount++;
         } else {
@@ -389,6 +391,13 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         enabled = preferences.getBoolean("EnableInAppPreview", true);
                         editor.putBoolean("EnableInAppPreview", !enabled);
                         editor.commit();
+                    } else if (i == inchatSoundRow) {
+                        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        enabled = preferences.getBoolean("EnableInChatSound", true);
+                        editor.putBoolean("EnableInChatSound", !enabled);
+                        editor.commit();
+                        NotificationsController.getInstance().setInChatSoundEnabled(!enabled);
                     } else if (i == inappPriorityRow) {
                         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = preferences.edit();
@@ -778,6 +787,8 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     checkCell.setTextAndCheck(LocaleController.getString("NotificationsService", R.string.NotificationsService), preferences.getBoolean("pushService", true), false);
                 } else if (i == badgeNumberRow) {
                     checkCell.setTextAndCheck(LocaleController.getString("BadgeNumber", R.string.BadgeNumber), preferences.getBoolean("badgeNumber", true), true);
+                } else if (i == inchatSoundRow) {
+                    checkCell.setTextAndCheck(LocaleController.getString("InChatSound", R.string.InChatSound), preferences.getBoolean("EnableInChatSound", true), true);
                 } else if (i == messageVibrateRow) {
                     checkCell.setTextAndCheck(LocaleController.getString("Vibrate", R.string.Vibrate), preferences.getBoolean("EnableVibrateAll", true), true);
                 }  else if (i == groupVibrateRow) {
@@ -902,7 +913,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     i == groupPreviewRow || i == inappSoundRow || i == inappVibrateRow ||
                     i == inappPreviewRow || i == contactJoinedRow || i == pebbleAlertRow ||
                     i == notificationsServiceRow || i == badgeNumberRow || i == inappPriorityRow ||
-                    i == messageVibrateRow || i == groupVibrateRow) {
+                    i == inchatSoundRow || i == messageVibrateRow || i == groupVibrateRow) {
                 return 1;
             } else if (i == messageLedRow || i == groupLedRow) {
                 return 3;
