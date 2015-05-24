@@ -316,6 +316,7 @@
     <string name="AlwaysShowPopup">Mostra sempre i popup</string>
     <string name="BadgeNumber">Contatore badge</string>
     <string name="Short">Breve</string>
+    <string name="Medium">Media</string>
     <string name="Long">Lunga</string>
     <string name="SystemDefault">Predefinito di sistema</string>
     <string name="SettingsDefault">Impostazioni predefinite</string>

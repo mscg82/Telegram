@@ -651,6 +651,8 @@ public class NotificationsController {
                     mBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
                 } else if (needVibrate == 3) {
                     mBuilder.setVibrate(new long[]{0, 1000});
+                } else if (needVibrate == 5) {
+                    mBuilder.setVibrate(new long[]{0, 300, 200, 300});
                 }
             } else {
                 mBuilder.setVibrate(new long[]{0, 0});
@@ -765,9 +767,9 @@ public class NotificationsController {
             RemoteInput remoteInputAuto = new RemoteInput.Builder(NotificationsController.EXTRA_VOICE_REPLY).setLabel(LocaleController.getString("Reply", R.string.Reply)).build();
 
             NotificationCompat.CarExtender.UnreadConversation.Builder unreadConvBuilder = new NotificationCompat.CarExtender.UnreadConversation.Builder(name)
-            .setReadPendingIntent(msgHeardPendingIntent)
-            .setReplyAction(msgReplyPendingIntent, remoteInputAuto)
-            .setLatestTimestamp((long) max_date * 1000);
+                    .setReadPendingIntent(msgHeardPendingIntent)
+                    .setReplyAction(msgReplyPendingIntent, remoteInputAuto)
+                    .setLatestTimestamp((long) max_date * 1000);
 
             String text = "";
             for (int a = messageObjects.size() - 1; a >= 0; a--) {
@@ -807,8 +809,8 @@ public class NotificationsController {
                     .setColor(0xff2ca5e0)
                     .setGroup("messages")
                     .setLocalOnly(true)
-                    //.setGroupSummary(false)
-                    //.setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                            //.setGroupSummary(false)
+                            //.setCategory(NotificationCompat.CATEGORY_MESSAGE)
                     .extend(new NotificationCompat.CarExtender().setUnreadConversation(unreadConvBuilder.build()));
             if (photoPath != null) {
                 BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(photoPath, null, "50_50");
@@ -1286,7 +1288,7 @@ public class NotificationsController {
                     cv.put("count", count);
                     context.getContentResolver().insert(Uri.parse("content://com.teslacoilsw.notifier/unread_count"), cv);
                 } catch (Throwable e) {
-                     //ignore
+                    //ignore
                 }
                 try {
                     launcherClassName = getLauncherClassName(context);

@@ -442,6 +442,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                             LocaleController.getString("VibrationDisabled", R.string.VibrationDisabled),
                             LocaleController.getString("Default", R.string.Default),
                             LocaleController.getString("Short", R.string.Short),
+                            LocaleController.getString("Medium", R.string.Medium),
                             LocaleController.getString("Long", R.string.Long),
                             LocaleController.getString("OnlyIfSilent", R.string.OnlyIfSilent)
                     }, new DialogInterface.OnClickListener() {
@@ -460,8 +461,10 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                             } else if (which == 2) {
                                 editor.putInt(param, 1);
                             } else if (which == 3) {
-                                editor.putInt(param, 3);
+                                editor.putInt(param, 5);
                             } else if (which == 4) {
+                                editor.putInt(param, 3);
+                            } else if (which == 5) {
                                 editor.putInt(param, 4);
                             }
                             editor.commit();
@@ -770,6 +773,8 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Long", R.string.Long), true);
                     } else if (value == 4) {
                         textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("OnlyIfSilent", R.string.OnlyIfSilent), true);
+                    } else if (value == 5) {
+                        textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Medium", R.string.Medium), true);
                     }
                 } else if (i == repeatRow) {
                     textCell.setMultilineDetail(false);

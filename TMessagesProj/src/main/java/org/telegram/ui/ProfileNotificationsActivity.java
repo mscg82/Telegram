@@ -136,6 +136,7 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                             LocaleController.getString("SettingsDefault", R.string.SettingsDefault),
                             LocaleController.getString("SystemDefault", R.string.SystemDefault),
                             LocaleController.getString("Short", R.string.Short),
+                            LocaleController.getString("Medium", R.string.Medium),
                             LocaleController.getString("Long", R.string.Long)
                     }, new DialogInterface.OnClickListener() {
                         @Override
@@ -151,6 +152,8 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                             } else if (which == 3) {
                                 editor.putInt("vibrate_" + dialog_id, 1);
                             } else if (which == 4) {
+                                editor.putInt("vibrate_" + dialog_id, 5);
+                            } else if (which == 5) {
                                 editor.putInt("vibrate_" + dialog_id, 3);
                             }
                             editor.commit();
@@ -530,6 +533,8 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                         textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Long", R.string.Long), true);
                     } else if (value == 4) {
                         textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("SystemDefault", R.string.SystemDefault), true);
+                    } else if (value == 5) {
+                        textCell.setTextAndValue(LocaleController.getString("Vibrate", R.string.Vibrate), LocaleController.getString("Medium", R.string.Medium), true);
                     }
                 } else if (i == settingsNotificationsRow) {
                     int value = preferences.getInt("notify2_" + dialog_id, 0);
