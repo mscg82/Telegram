@@ -61,7 +61,7 @@ public class TgChooserTargetService extends ChooserTargetService {
                     ArrayList<Integer> usersToLoad = new ArrayList<>();
                     usersToLoad.add(UserConfig.getClientUserId());
                     ArrayList<Integer> chatsToLoad = new ArrayList<>();
-                    SQLiteCursor cursor = MessagesStorage.getInstance().getDatabase().queryFinalized(String.format(Locale.US, "SELECT did FROM dialogs ORDER BY date DESC LIMIT %d,%d", 0, 20));
+                    SQLiteCursor cursor = MessagesStorage.getInstance().getDatabase().queryFinalized(String.format(Locale.US, "SELECT did FROM dialogs ORDER BY date DESC LIMIT %d,%d", 0, 30));
                     while (cursor.next()) {
                         long id = cursor.longValue(0);
 
@@ -100,7 +100,6 @@ public class TgChooserTargetService extends ChooserTargetService {
                     FileLog.e("tmessages", e);
                 }
                 for (int a = 0; a < dialogs.size(); a++) {
-                    float score = (a + 1) / 20.0f;
                     Bundle extras = new Bundle();
                     Icon icon = null;
                     String name = null;
@@ -109,11 +108,13 @@ public class TgChooserTargetService extends ChooserTargetService {
                         for (int b = 0; b < users.size(); b++) {
                             TLRPC.User user = users.get(b);
                             if (user.id == id) {
-                                extras.putLong("dialogId", (long) id);
-                                if (user.photo != null && user.photo.photo_small != null) {
-                                    icon = createRoundBitmap(FileLoader.getPathToAttach(user.photo.photo_small, true));
+                                if (!user.bot) {
+                                    extras.putLong("dialogId", (long) id);
+                                    if (user.photo != null && user.photo.photo_small != null) {
+                                        icon = createRoundBitmap(FileLoader.getPathToAttach(user.photo.photo_small, true));
+                                    }
+                                    name = ContactsController.formatName(user.first_name, user.last_name);
                                 }
-                                name = ContactsController.formatName(user.first_name, user.last_name);
                                 break;
                             }
                         }
@@ -121,11 +122,13 @@ public class TgChooserTargetService extends ChooserTargetService {
                         for (int b = 0; b < chats.size(); b++) {
                             TLRPC.Chat chat = chats.get(b);
                             if (chat.id == -id) {
-                                extras.putLong("dialogId", (long) id);
-                                if (chat.photo != null && chat.photo.photo_small != null) {
-                                    icon = createRoundBitmap(FileLoader.getPathToAttach(chat.photo.photo_small, true));
+                                if (!ChatObject.isNotInChat(chat) && (!ChatObject.isChannel(chat) || chat.megagroup)) {
+                                    extras.putLong("dialogId", (long) id);
+                                    if (chat.photo != null && chat.photo.photo_small != null) {
+                                        icon = createRoundBitmap(FileLoader.getPathToAttach(chat.photo.photo_small, true));
+                                    }
+                                    name = chat.title;
                                 }
-                                name = chat.title;
                                 break;
                             }
                         }
@@ -134,7 +137,7 @@ public class TgChooserTargetService extends ChooserTargetService {
                         if (icon == null) {
                             icon = Icon.createWithResource(ApplicationLoader.applicationContext, R.drawable.logo_avatar);
                         }
-                        targets.add(new ChooserTarget(name, icon, score, componentName, extras));
+                        targets.add(new ChooserTarget(name, icon, 1.0f, componentName, extras));
                     }
                 }
                 semaphore.release();

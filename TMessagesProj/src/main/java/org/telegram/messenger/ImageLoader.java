@@ -75,7 +75,7 @@ public class ImageLoader {
     private HashMap<String, Runnable> retryHttpsTasks = new HashMap<>();
     private int currentHttpFileLoadTasksCount = 0;
 
-    protected VMRuntimeHack runtimeHack = null;
+    public VMRuntimeHack runtimeHack = null;
     private String ignoreRemoval = null;
 
     private volatile long lastCacheOutTime = 0;
@@ -1162,7 +1162,18 @@ public class ImageLoader {
                 FileLog.e("tmessages", "file system changed");
                 Runnable r = new Runnable() {
                     public void run() {
-                        FileLoader.getInstance().setMediaDirs(createMediaPaths());
+                        cacheOutQueue.postRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                final HashMap<Integer, File> paths = createMediaPaths();
+                                AndroidUtilities.runOnUIThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        FileLoader.getInstance().setMediaDirs(paths);
+                                    }
+                                });
+                            }
+                        });
                     }
                 };
                 if (Intent.ACTION_MEDIA_UNMOUNTED.equals(intent.getAction())) {
@@ -1186,7 +1197,35 @@ public class ImageLoader {
         filter.addDataScheme("file");
         ApplicationLoader.applicationContext.registerReceiver(receiver, filter);
 
-        FileLoader.getInstance().setMediaDirs(createMediaPaths());
+        HashMap<Integer, File> mediaDirs = new HashMap<>();
+        File cachePath = AndroidUtilities.getCacheDir();
+        if (!cachePath.isDirectory()) {
+            try {
+                cachePath.mkdirs();
+            } catch (Exception e) {
+                FileLog.e("tmessages", e);
+            }
+        }
+        try {
+            new File(cachePath, ".nomedia").createNewFile();
+        } catch (Exception e) {
+            FileLog.e("tmessages", e);
+        }
+        mediaDirs.put(FileLoader.MEDIA_DIR_CACHE, cachePath);
+        FileLoader.getInstance().setMediaDirs(mediaDirs);
+
+        cacheOutQueue.postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                final HashMap<Integer, File> paths = createMediaPaths();
+                AndroidUtilities.runOnUIThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        FileLoader.getInstance().setMediaDirs(paths);
+                    }
+                });
+            }
+        });
     }
 
     public HashMap<Integer, File> createMediaPaths() {
@@ -1217,7 +1256,7 @@ public class ImageLoader {
                     try {
                         File imagePath = new File(telegramPath, "Telegram Images");
                         imagePath.mkdir();
-                        if (imagePath.isDirectory() && canMoveFiles(cachePath, imagePath)) {
+                        if (imagePath.isDirectory() && canMoveFiles(cachePath, imagePath, FileLoader.MEDIA_DIR_IMAGE)) {
                             mediaDirs.put(FileLoader.MEDIA_DIR_IMAGE, imagePath);
                             FileLog.e("tmessages", "image path = " + imagePath);
                         }
@@ -1228,7 +1267,7 @@ public class ImageLoader {
                     try {
                         File videoPath = new File(telegramPath, "Telegram Video");
                         videoPath.mkdir();
-                        if (videoPath.isDirectory() && canMoveFiles(cachePath, videoPath)) {
+                        if (videoPath.isDirectory() && canMoveFiles(cachePath, videoPath, FileLoader.MEDIA_DIR_VIDEO)) {
                             mediaDirs.put(FileLoader.MEDIA_DIR_VIDEO, videoPath);
                             FileLog.e("tmessages", "video path = " + videoPath);
                         }
@@ -1239,7 +1278,7 @@ public class ImageLoader {
                     try {
                         File audioPath = new File(telegramPath, "Telegram Audio");
                         audioPath.mkdir();
-                        if (audioPath.isDirectory() && canMoveFiles(cachePath, audioPath)) {
+                        if (audioPath.isDirectory() && canMoveFiles(cachePath, audioPath, FileLoader.MEDIA_DIR_AUDIO)) {
                             new File(audioPath, ".nomedia").createNewFile();
                             mediaDirs.put(FileLoader.MEDIA_DIR_AUDIO, audioPath);
                             FileLog.e("tmessages", "audio path = " + audioPath);
@@ -1251,7 +1290,7 @@ public class ImageLoader {
                     try {
                         File documentPath = new File(telegramPath, "Telegram Documents");
                         documentPath.mkdir();
-                        if (documentPath.isDirectory() && canMoveFiles(cachePath, documentPath)) {
+                        if (documentPath.isDirectory() && canMoveFiles(cachePath, documentPath, FileLoader.MEDIA_DIR_DOCUMENT)) {
                             new File(documentPath, ".nomedia").createNewFile();
                             mediaDirs.put(FileLoader.MEDIA_DIR_DOCUMENT, documentPath);
                             FileLog.e("tmessages", "documents path = " + documentPath);
@@ -1271,23 +1310,35 @@ public class ImageLoader {
         return mediaDirs;
     }
 
-    private boolean canMoveFiles(File from, File to) {
+    private boolean canMoveFiles(File from, File to, int type) {
         RandomAccessFile file = null;
         try {
-            for (int a = 0; a < 2; a++) {
-                File srcFile = new File(from, "temp.file");
-                srcFile.createNewFile();
-                file = new RandomAccessFile(srcFile, "rws");
-                file.write(1);
-                file.close();
-                file = null;
-                File dstFile = new File(to, "temp.file");
-                boolean canRename = srcFile.renameTo(dstFile);
-                srcFile.delete();
-                dstFile.delete();
-                if (canRename) {
-                    return true;
-                }
+            File srcFile = null;
+            File dstFile = null;
+            if (type == FileLoader.MEDIA_DIR_IMAGE) {
+                srcFile = new File(from, "000000000_999999_temp.jpg");
+                dstFile = new File(to, "000000000_999999.jpg");
+            } else if (type == FileLoader.MEDIA_DIR_DOCUMENT) {
+                srcFile = new File(from, "000000000_999999_temp.doc");
+                dstFile = new File(to, "000000000_999999.doc");
+            } else if (type == FileLoader.MEDIA_DIR_AUDIO) {
+                srcFile = new File(from, "000000000_999999_temp.ogg");
+                dstFile = new File(to, "000000000_999999.ogg");
+            } else if (type == FileLoader.MEDIA_DIR_VIDEO) {
+                srcFile = new File(from, "000000000_999999_temp.mp4");
+                dstFile = new File(to, "000000000_999999.mp4");
+            }
+            byte[] buffer = new byte[1024];
+            srcFile.createNewFile();
+            file = new RandomAccessFile(srcFile, "rws");
+            file.write(buffer);
+            file.close();
+            file = null;
+            boolean canRename = srcFile.renameTo(dstFile);
+            srcFile.delete();
+            dstFile.delete();
+            if (canRename) {
+                return true;
             }
         } catch (Exception e) {
             FileLog.e("tmessages", e);
